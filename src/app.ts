@@ -7,6 +7,7 @@ import express, {
 import morgan from 'morgan';
 import initializeDatabase, { pool } from './config/db';
 import { authRouter } from './modules/auth/auth.router';
+import { userRouter } from './modules/user/user.router';
 
 const app = express();
 
@@ -33,6 +34,9 @@ app.get('/api/v1/health', (_req: Request, res: Response) => {
 
 // Auth routes
 app.use('/api/v1/auth', authRouter);
+
+// user routes
+app.use('/api/v1/users', userRouter);
 
 // Handle 404 - Route not found
 app.use((_req: Request, res: Response) => {
