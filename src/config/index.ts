@@ -7,7 +7,8 @@ const config = {
   DB_CONNECTION_STRING: process.env.DB_CONNECTION_STRING || '',
   PORT: process.env.PORT || 5000,
   NODE_ENV: process.env.NODE_ENV || 'development',
-  JWT_SECRET: process.env.JWT_SECRET,
+  ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
+  ACCESS_TOKEN_EXPIRES_IN: Number(process.env.ACCESS_TOKEN_EXPIRES_IN) || 1600,
 };
 
 export default config;

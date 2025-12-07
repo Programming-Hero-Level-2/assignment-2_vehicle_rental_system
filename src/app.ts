@@ -1,6 +1,12 @@
-import express, { Request, Response } from 'express';
+import express, {
+  ErrorRequestHandler,
+  NextFunction,
+  Request,
+  Response,
+} from 'express';
 import morgan from 'morgan';
 import initializeDatabase, { pool } from './config/db';
+import { authRouter } from './modules/auth/auth.router';
 
 const app = express();
 
@@ -25,7 +31,8 @@ app.get('/api/v1/health', (_req: Request, res: Response) => {
     .json({ message: 'Server is healthy', success: true, code: 200 });
 });
 
-// Register other routes here
+// Auth routes
+app.use('/api/v1/auth', authRouter);
 
 // Handle 404 - Route not found
 app.use((_req: Request, res: Response) => {
@@ -33,6 +40,14 @@ app.use((_req: Request, res: Response) => {
     message: 'Route not found',
     success: false,
     code: 404,
+  });
+});
+
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.log(err);
+  res.status((err as any).status || 500).json({
+    message: err.message,
+    errors: (err as any).errors,
   });
 });
 
