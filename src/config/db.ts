@@ -40,13 +40,23 @@ const initializeDatabase = async () => {
     `);
 
     await pool.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'availability_status') THEN
+          CREATE TYPE availability_status AS ENUM ('available', 'booked');
+        END IF;
+      END
+      $$;
+    `);
+
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS vehicles (
       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
       vehicle_name VARCHAR(100) NOT NULL,
       type vehicle_type NOT NULL,
       registration_number VARCHAR(50) UNIQUE NOT NULL,
       daily_rent_price NUMERIC(10, 2) NOT NULL CHECK (daily_rent_price >= 0),
-      availability_status BOOLEAN DEFAULT TRUE,
+      availability_status availability_status NOT NULL,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
     );
