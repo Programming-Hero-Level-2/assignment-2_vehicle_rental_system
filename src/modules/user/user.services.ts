@@ -97,7 +97,14 @@ const deleteUser = async (id: string): Promise<DeleteResponseType> => {
     throw new Error('User not found');
   }
 
-  // TODO: Delete user (only if no active bookings exist), WIP
+  const activeBooking = await pool.query(
+    'SELECT * FROM bookings WHERE customer_id = $1 AND status = $2',
+    [user.id, 'active']
+  );
+
+  if (activeBooking.rowCount !== 0) {
+    throw new Error('Cannot delete user with active bookings');
+  }
 
   await pool.query('DELETE FROM users WHERE id = $1', [id]);
 

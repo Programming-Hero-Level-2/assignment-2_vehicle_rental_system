@@ -117,14 +117,14 @@ const updateVehicle = async (
 const deleteVehicle = async (
   id: string
 ): Promise<(Vehicle & { created_at: Date; updated_at: Date }) | null> => {
-  // const activeBooking = await pool.query(
-  //   'SELECT * FROM bookings WHERE vehicle_id = $1 AND status = $2',
-  //   [id, 'active']
-  // );
+  const activeBooking = await pool.query(
+    'SELECT * FROM bookings WHERE vehicle_id = $1 AND status = $2',
+    [id, 'active']
+  );
 
-  // if (activeBooking.rowCount !== 0) {
-  //   throw new ApiError(400, 'Cannot delete vehicle with active bookings');
-  // }
+  if (activeBooking.rowCount !== 0) {
+    throw new ApiError(400, 'Cannot delete vehicle with active bookings');
+  }
 
   const result = await pool.query(
     'DELETE FROM vehicles WHERE id = $1 RETURNING *',
