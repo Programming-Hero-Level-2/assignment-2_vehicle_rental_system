@@ -50,7 +50,7 @@ export const decodeToken = ({
   }
 };
 
-export const verifyToken = ({
+const verifyToken = ({
   token,
   secret = config.ACCESS_TOKEN_SECRET!,
   algorithm = 'HS256',
@@ -61,7 +61,7 @@ export const verifyToken = ({
       | JwtLibPayload;
   } catch (err) {
     console.error('[JWT verifyToken]:', err);
-    throw new Error('Server Error');
+    throw new Error('Internal Server Error');
   }
 };
 

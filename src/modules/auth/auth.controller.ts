@@ -57,7 +57,7 @@ const registerUser = async (
 };
 
 const loginUser = async (req: Request, res: Response, next: NextFunction) => {
-  const { email, password } = req.body;
+  const { email, password } = req?.body;
 
   try {
     if (!email || !password) {
