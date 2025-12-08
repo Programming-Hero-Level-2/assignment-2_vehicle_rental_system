@@ -56,7 +56,7 @@ const createVehicle = async (
       type,
       registrationNumber,
       daily_rent_price,
-      availability_status,
+      availability_status.toLocaleLowerCase(),
     ]
   );
 

@@ -63,13 +63,13 @@ const initializeDatabase = async () => {
       `);
 
     await pool.query(`
-  DO $$
-  BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'booking_status') THEN
-      CREATE TYPE booking_status AS ENUM ('active', 'cancelled', 'returned');
-    END IF;
-  END
-  $$;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'booking_status') THEN
+    CREATE TYPE booking_status AS ENUM ('active', 'cancelled', 'returned');
+  END IF;
+END
+$$;
 `);
 
     await pool.query(`
