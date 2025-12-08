@@ -95,7 +95,111 @@ const createVehicle = async (
   }
 };
 
+const getSingleVehicle = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { vehicleId } = req.params;
+    const vehicle = await vehicleService.getSingleVehicle(vehicleId!);
+
+    if (!vehicle) {
+      return res.status(404).json({
+        success: false,
+        message: 'failed to retrieve vehicle',
+      });
+    }
+
+    delete (vehicle as Partial<typeof vehicle>)?.created_at;
+    delete (vehicle as Partial<typeof vehicle>)?.updated_at;
+
+    return res.status(200).json({
+      success: true,
+      message: 'Vehicle retrieved successfully',
+      data: vehicle,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateVehicle = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { vehicleId } = req.params;
+    const {
+      vehicle_name,
+      type,
+      registration_number,
+      daily_rent_price,
+      availability_status,
+    } = req.body;
+
+    const updatedVehicle = await vehicleService.updateVehicle(
+      {
+        vehicle_name,
+        type,
+        registration_number,
+        daily_rent_price,
+        availability_status,
+      },
+      vehicleId!
+    );
+
+    if (!updatedVehicle) {
+      return res.status(404).json({
+        success: false,
+        message: 'Vehicle not found',
+      });
+    }
+
+    delete (updatedVehicle as Partial<typeof updatedVehicle>)?.created_at;
+    delete (updatedVehicle as Partial<typeof updatedVehicle>)?.updated_at;
+
+    return res.status(200).json({
+      success: true,
+      message: 'Vehicle updated successfully',
+      data: updatedVehicle,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteVehicle = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { vehicleId } = req.params;
+
+    const deletedVehicle = await vehicleService.deleteVehicle(vehicleId!);
+
+    if (!deletedVehicle) {
+      return res.status(404).json({
+        success: false,
+        message: 'Vehicle not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Vehicle deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const vehicleController = {
   getVehicles,
   createVehicle,
+  getSingleVehicle,
+  updateVehicle,
+  deleteVehicle,
 };

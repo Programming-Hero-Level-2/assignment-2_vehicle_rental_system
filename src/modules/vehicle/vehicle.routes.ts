@@ -15,8 +15,18 @@ router
   );
 
 router
-  .get('/:vehicleId', () => {}) // Public
-  .put('/:vehicleId', () => {}) // admin only
-  .delete('/:vehicleId', () => {}); // admin only (only is no active bookings exist)
+  .get('/:vehicleId', vehicleController.getSingleVehicle) // Public
+  .put(
+    '/:vehicleId',
+    authenticated,
+    authorize(['admin']),
+    vehicleController.updateVehicle
+  )
+  .delete(
+    '/:vehicleId',
+    authenticated,
+    authorize(['admin']),
+    vehicleController.deleteVehicle
+  ); // admin only (only is no active bookings exist)
 
 export const vehicleRoutes = router;
