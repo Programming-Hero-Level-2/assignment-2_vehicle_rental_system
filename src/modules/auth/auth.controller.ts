@@ -27,11 +27,11 @@ const registerUser = async (
     });
 
     const payload = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
+      id: user?.id,
+      name: user?.name,
+      email: user?.email,
+      phone: user?.phone,
+      role: user?.role,
     };
 
     const accessToken = generateToken({ payload });
@@ -44,8 +44,8 @@ const registerUser = async (
         access_token: accessToken,
         user: {
           ...payload,
-          created_at: user.created_at,
-          updated_at: user.updated_at,
+          created_at: user?.created_at,
+          updated_at: user?.updated_at,
         },
       },
     };
