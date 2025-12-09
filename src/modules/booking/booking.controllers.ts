@@ -1,104 +1,82 @@
 import { NextFunction, Request, Response } from 'express';
 import { BookingResponse, CreateBookingPayload } from './booking.types';
 import { bookingService } from './booking.services';
+import asyncHandler from '../../utils/asyncHandler';
+import ApiResponse from '../../utils/ApiResponse';
+import { badRequest, notFound } from '../../utils/error';
 
-const getBookings = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    let bookings: BookingResponse['data'];
+const getBookings = asyncHandler(async (req, res) => {
+  let bookings: BookingResponse['data'];
 
-    if (req.user?.role === 'admin') {
-      bookings = await bookingService.getBookings();
-    } else {
-      bookings = await bookingService.findBookingsByUserId(req.user!.id);
-    }
-
-    if (bookings.length === 0) {
-      return res.status(200).json({
-        message: 'No bookings found',
-        success: true,
-        data: [],
-      });
-    }
-
-    res.status(200).json({
-      message: 'Bookings retrieved successfully',
-      success: true,
-      data: bookings,
-    });
-  } catch (error) {
-    next(error);
+  if (req.user?.role === 'admin') {
+    bookings = await bookingService.getBookings();
+  } else {
+    bookings = await bookingService.findBookingsByUserId(req.user!.id);
   }
-};
 
-const createBooking = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const {
-      vehicle_id,
-      customer_id,
-      rent_end_date,
-      rent_start_date,
-    }: CreateBookingPayload = req.body;
-
-    if (!vehicle_id || !customer_id || !rent_start_date || !rent_end_date) {
-      throw new Error('Missing required booking fields');
-    }
-
-    if (rent_end_date <= rent_start_date) {
-      throw new Error('Invalid rent period');
-    }
-
-    const booking = await bookingService.createBooking({
-      vehicle_id,
-      customer_id,
-      rent_end_date,
-      rent_start_date,
-    });
-
-    res.status(201).json({
-      message: 'Booking created successfully',
-      success: true,
-      data: booking,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const updateBooking = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const bookingId = req.params.bookingId;
-    const { status } = req.body;
-
-    const updatedBooking = await bookingService.updateBooking(
-      { status },
-      bookingId!,
-      req.user!.id
+  res
+    .status(200)
+    .json(
+      bookings.length === 0
+        ? new ApiResponse('No bookings found', 200, [])
+        : new ApiResponse('Bookings retrieved successfully', 200, bookings)
     );
+});
 
-    if (!updatedBooking) {
-      return res.status(404).json({
-        message: 'Booking not found',
-        success: false,
-      });
-    }
+const createBooking = asyncHandler(async (req, res) => {
+  const {
+    vehicle_id,
+    customer_id,
+    rent_end_date,
+    rent_start_date,
+  }: CreateBookingPayload = req.body;
 
-    res.status(200).json({
-      message: 'Booking updated successfully',
-      success: true,
-      data: updatedBooking,
-    });
-  } catch (error) {
-    next(error);
+  if (!vehicle_id || !customer_id || !rent_start_date || !rent_end_date) {
+    throw badRequest('Missing required booking fields');
   }
-};
+
+  if (rent_end_date <= rent_start_date) {
+    throw badRequest('Invalid rent period');
+  }
+
+  const booking = await bookingService.createBooking({
+    vehicle_id,
+    customer_id,
+    rent_end_date,
+    rent_start_date,
+  });
+
+  res
+    .status(201)
+    .json(new ApiResponse('Booking created successfully', 201, booking));
+});
+
+const updateBooking = asyncHandler(async (req, res) => {
+  const bookingId = req.params.bookingId;
+  const { status } = req.body;
+
+  if (!bookingId) {
+    throw badRequest('Booking ID is required');
+  }
+
+  if (!status) {
+    throw badRequest('Status is required to update booking');
+  }
+
+  const updatedBooking = await bookingService.updateBooking(
+    { status },
+    bookingId!,
+    req.user!.id
+  );
+
+  if (!updatedBooking) {
+    throw notFound('Booking not found');
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse('Booking updated successfully', 200, updatedBooking));
+});
 
 export const bookingController = {
   createBooking,
