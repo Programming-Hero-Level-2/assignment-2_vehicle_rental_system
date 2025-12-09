@@ -160,7 +160,6 @@ const updateBooking = async (
     throw new Error('Unauthorized to update this booking');
   }
 
-
   const vehicle = await vehicleService.getSingleVehicle(booking.vehicle_id);
 
   if (!user || !vehicle) {
@@ -223,9 +222,33 @@ const updateBooking = async (
   };
 };
 
+const updateExpiredActiveBookings = async (): Promise<void> => {
+  const now = new Date();
+
+  const expiredBookingsResult = await pool.query(
+    `SELECT * FROM bookings WHERE rent_end_date < $1 AND status = 'active';`,
+    [now]
+  );
+
+  const expiredBookings = expiredBookingsResult.rows;
+
+  for (const booking of expiredBookings) {
+    await pool.query(
+      `UPDATE bookings SET status = 'returned', updated_at = NOW() WHERE id = $1;`,
+      [booking.id]
+    );
+
+    await pool.query(
+      `UPDATE vehicles SET availability_status = 'available' WHERE id = $1;`,
+      [booking.vehicle_id]
+    );
+  }
+};
+
 export const bookingService = {
   getBookings,
   createBooking,
   updateBooking,
   findBookingsByUserId,
+  updateExpiredActiveBookings,
 };

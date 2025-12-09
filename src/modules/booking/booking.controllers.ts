@@ -6,8 +6,9 @@ import ApiResponse from '../../utils/ApiResponse';
 import { badRequest, notFound } from '../../utils/error';
 
 const getBookings = asyncHandler(async (req, res) => {
-  let bookings: BookingResponse['data'];
+  await bookingService.updateExpiredActiveBookings();
 
+  let bookings: BookingResponse['data'];
   if (req.user?.role === 'admin') {
     bookings = await bookingService.getBookings();
   } else {
