@@ -1,6 +1,6 @@
 # **Vehicle Rental System – Backend Application**
 
-### **Live API Base URL:** [_deployed URL here_](https://vechile-booking-app.vercel.app/api/v1)
+### **Live API Base URL:** [_deployed URL here_](https://vehicle-rental-system-tau-ruby.vercel.app/api/v1)
 
 ---
 
