@@ -81,7 +81,7 @@ npm install or pnpm install
 Inside `.env`:
 
 ```bash
-DB_CONNECTION_STRING='postgresql://neondb_owner:npg_7NmAfyg1lMkq@ep-hidden-frog-aheo2rs0-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+DB_CONNECTION_STRING=your_db_url_link
 PORT=5000
 NODE_ENV='development'
 ACCESS_TOKEN_SECRET=your_jwt_secret
