@@ -33,12 +33,3 @@ app.use(routerNotFound);
 app.use(errorMiddleware);
 
 export default app;
-
-// Global error handler
-// app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-//   console.log(err);
-//   res.status((err as any).status || 500).json({
-//     message: err.message,
-//     errors: (err as any).errors,
-//   });
-// });

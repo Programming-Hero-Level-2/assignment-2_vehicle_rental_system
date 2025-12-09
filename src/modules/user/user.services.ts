@@ -1,4 +1,5 @@
 import { pool } from '../../config/db';
+import { badRequest, notFound, serverError } from '../../utils/error';
 import { CreateUserType, DeleteResponseType, User } from './user.types';
 
 /**
@@ -36,37 +37,24 @@ const createUser = async (payload: CreateUserType): Promise<User | null> => {
      VALUES ($1, $2, $3, $4, $5) RETURNING *`,
     [name, email.toLowerCase(), phone, password, role]
   );
+  
   return result.rowCount === 0 ? null : result.rows[0];
 };
 
-const getUsers = async (): Promise<Omit<User, 'password'>[]> => {
+const getUsers = async (): Promise<User[]> => {
   const result = await pool.query('SELECT * FROM users');
 
-  if (result.rowCount === 0) {
-    return [];
-  }
-
-  const payload = result.rows.map((user) => ({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    role: user.role,
-    created_at: user.created_at,
-    updated_at: user.updated_at,
-  }));
-
-  return payload;
+  return result.rowCount === 0 ? [] : result.rows;
 };
 
 const updateUser = async (
   id: string,
-  payload: Partial<CreateUserType>
+  payload: CreateUserType
 ): Promise<User> => {
   const user = await findUserById(id);
 
   if (!user) {
-    throw new Error('User not found');
+    throw notFound('User not found');
   }
 
   const updatedData = {
@@ -84,17 +72,22 @@ const updateUser = async (
   );
 
   if (results.rowCount === 0) {
-    throw new Error('Failed to update user');
+    throw serverError('Failed to update user');
   }
 
   return results.rows[0];
 };
 
-const deleteUser = async (id: string): Promise<DeleteResponseType> => {
+/**
+ * Delete user service
+ * @param id number
+ * @returns User
+ */
+const deleteUser = async (id: string): Promise<User> => {
   const user = await findUserById(id);
 
   if (!user) {
-    throw new Error('User not found');
+    throw notFound('User not found');
   }
 
   const activeBooking = await pool.query(
@@ -103,16 +96,18 @@ const deleteUser = async (id: string): Promise<DeleteResponseType> => {
   );
 
   if (activeBooking.rowCount !== 0) {
-    throw new Error('Cannot delete user with active bookings');
+    throw badRequest('Cannot delete user with active bookings');
   }
 
-  await pool.query('DELETE FROM users WHERE id = $1', [id]);
+  const deletedResult = await pool.query('DELETE FROM users WHERE id = $1', [
+    id,
+  ]);
 
-  return {
-    code: 204,
-    message: 'User deleted successfully',
-    success: true,
-  };
+  if (deletedResult.rowCount === 0) {
+    throw serverError('Failed to delete user');
+  }
+
+  return deletedResult.rows[0];
 };
 
 export const userServices = {

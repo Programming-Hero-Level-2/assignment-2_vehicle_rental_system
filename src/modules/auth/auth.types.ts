@@ -5,3 +5,8 @@ export type RegisterInputType = {
   password: string;
   role?: 'customer' | 'admin';
 };
+
+export type LoginInputType = {
+  email: string;
+  password: string;
+};

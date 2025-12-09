@@ -1,7 +1,8 @@
+import e from 'express';
 import { pool } from '../../config/db';
 import { ApiError } from '../../utils/ApiError';
-import { handleError } from '../../utils/error';
-import { generateVehicleNumber } from '../../utils/genereateVehicleNumber';
+import { badRequest, notFound, serverError } from '../../utils/error';
+import { generateVehicleNumber } from '../../utils/generateVehicleNumber';
 import { Vehicle } from './vehicle.types';
 
 const getVehicles = async (): Promise<
@@ -44,7 +45,7 @@ const createVehicle = async (
   );
 
   if (isExistingNumber.rowCount !== 0) {
-    throw new Error('Registration number already exists');
+    throw badRequest('Registration number already exists');
   }
 
   const result = await pool.query(
@@ -60,7 +61,11 @@ const createVehicle = async (
     ]
   );
 
-  return result.rowCount === 0 ? null : result.rows[0];
+  if (result.rowCount === 0) {
+    throw serverError('Failed to create vehicle');
+  }
+
+  return result.rows[0];
 };
 
 const getSingleVehicle = async (
@@ -76,11 +81,11 @@ const getSingleVehicle = async (
 const updateVehicle = async (
   payload: Omit<Vehicle, 'id'>,
   id: string
-): Promise<(Vehicle & { created_at: Date; updated_at: Date }) | null> => {
+): Promise<Vehicle & { created_at: Date; updated_at: Date }> => {
   const existingVehicle = await getSingleVehicle(id);
 
   if (!existingVehicle) {
-    throw new ApiError(404, 'Vehicle not found');
+    throw notFound('Vehicle not found');
   }
 
   const checkRegistrationNumber = await pool.query(
@@ -89,8 +94,16 @@ const updateVehicle = async (
   );
 
   if (checkRegistrationNumber.rowCount !== 0) {
-    throw new Error('Registration number already exists');
+    throw badRequest('Registration number already exists');
   }
+
+  const {
+    vehicle_name,
+    type,
+    registration_number,
+    daily_rent_price,
+    availability_status,
+  } = payload;
 
   const result = await pool.query(
     `UPDATE vehicles SET 
@@ -102,28 +115,32 @@ const updateVehicle = async (
     updated_at = NOW()
     WHERE id = $6 RETURNING *`,
     [
-      payload.vehicle_name,
-      payload.type,
-      payload.registration_number,
-      payload.daily_rent_price,
-      payload.availability_status,
+      vehicle_name ?? existingVehicle.vehicle_name,
+      type ?? existingVehicle.type,
+      registration_number ?? existingVehicle.registration_number,
+      daily_rent_price ?? existingVehicle.daily_rent_price,
+      availability_status ?? existingVehicle.availability_status,
       id,
     ]
   );
 
-  return result.rowCount == 0 ? null : result.rows[0];
+  if (result.rowCount === 0) {
+    throw serverError('Failed to update vehicle');
+  }
+
+  return result.rows[0];
 };
 
 const deleteVehicle = async (
   id: string
-): Promise<(Vehicle & { created_at: Date; updated_at: Date }) | null> => {
+): Promise<Vehicle & { created_at: Date; updated_at: Date }> => {
   const activeBooking = await pool.query(
     'SELECT * FROM bookings WHERE vehicle_id = $1 AND status = $2',
     [id, 'active']
   );
 
   if (activeBooking.rowCount !== 0) {
-    throw new ApiError(400, 'Cannot delete vehicle with active bookings');
+    throw badRequest('Cannot delete vehicle with active bookings');
   }
 
   const result = await pool.query(
@@ -131,7 +148,11 @@ const deleteVehicle = async (
     [id]
   );
 
-  return result.rowCount === 0 ? null : result.rows[0];
+  if (result.rowCount === 0) {
+    throw serverError('Failed to delete vehicle');
+  }
+
+  return result.rows[0];
 };
 
 export const vehicleService = {

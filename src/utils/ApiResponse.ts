@@ -2,7 +2,7 @@ class ApiResponse<T> {
   success: boolean;
   constructor(
     public message: string = 'Success response',
-    public statusCode: number,
+    statusCode: number,
     public data?: T
   ) {
     this.message = message;

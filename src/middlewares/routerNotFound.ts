@@ -1,11 +1,11 @@
-import { NextFunction, Request, Response } from 'express';
+import asyncHandler from '../utils/asyncHandler';
 
-const routerNotFound = (_req: Request, res: Response, _next: NextFunction) => {
+const routerNotFound = asyncHandler(async (_req, res, _next) => {
   res.status(404).json({
     message: 'Route not found',
     success: false,
     code: 404,
   });
-};
+});
 
 export default routerNotFound;

@@ -1,44 +1,27 @@
 import { NextFunction, Request, Response } from 'express';
 import { vehicleService } from './vehicle.services';
+import asyncHandler from '../../utils/asyncHandler';
+import ApiResponse from '../../utils/ApiResponse';
+import { badRequest } from '../../utils/error';
 
-const getVehicles = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const vehicles = await vehicleService.getVehicles();
+const getVehicles = asyncHandler(async (_req, res) => {
+  const vehicles = await vehicleService.getVehicles();
 
-    const formattedVehicles = vehicles.map((vehicle) => ({
-      id: vehicle.id,
-      vehicle_name: vehicle.vehicle_name,
-      type: vehicle.type,
-      registration_number: vehicle.registration_number,
-      daily_rent_price: vehicle.daily_rent_price,
-      availability_status: vehicle.availability_status,
-    }));
+  const response =
+    (vehicles.length !== 0 &&
+      vehicles.map(({ created_at, updated_at, ...vehicle }) => vehicle)) ||
+    [];
 
-    if (vehicles.length === 0) {
-      return res.status(200).json({
-        success: true,
-        message: 'No vehicles found',
-        data: [],
-      });
-    }
+  return res
+    .status(200)
+    .json(
+      vehicles.length === 0
+        ? new ApiResponse('Vehicle not found', 200, response)
+        : new ApiResponse('Vehicles retrieved successfully', 200, response)
+    );
+});
 
-    const vehiclesResponse = {
-      success: true,
-      message: 'Vehicles retrieved successfully',
-      data: formattedVehicles,
-    };
-
-    return res.status(200).json(vehiclesResponse);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const createVehicle = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const createVehicle = asyncHandler(async (req, res) => {
   const {
     vehicle_name,
     type,
@@ -47,154 +30,107 @@ const createVehicle = async (
     availability_status,
   } = req.body;
 
-  try {
-    if (
-      [vehicle_name, type, availability_status].some(
-        (field) => field.trim() === ''
-      )
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing required fields',
-      });
-    }
+  if (
+    [vehicle_name, type, availability_status].some(
+      (field) => field.trim() === '' && !field
+    )
+  ) {
+    throw badRequest('All fields are required');
+  }
 
-    if (daily_rent_price < 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid daily rent price',
-      });
-    }
+  if (daily_rent_price < 0) {
+    throw badRequest('Daily rent price must be a positive number');
+  }
 
-    const vehicle = await vehicleService.createVehicle({
+  const vehicle = await vehicleService.createVehicle({
+    vehicle_name,
+    type,
+    registration_number,
+    daily_rent_price,
+    availability_status,
+  });
+
+  const response = {
+    id: vehicle?.id,
+    vehicle_name: vehicle?.vehicle_name,
+    type: vehicle?.type,
+    registration_number: vehicle?.registration_number,
+    daily_rent_price: vehicle?.daily_rent_price,
+    availability_status: vehicle?.availability_status,
+  };
+
+  return res
+    .status(201)
+    .json(new ApiResponse('Vehicle created successfully', 201, response));
+});
+
+const getSingleVehicle = asyncHandler(async (req, res) => {
+  const { vehicleId } = req.params;
+
+  if (!vehicleId) {
+    throw badRequest('Vehicle ID is required');
+  }
+
+  const vehicle = await vehicleService.getSingleVehicle(vehicleId!);
+
+  if (!vehicle) {
+    throw badRequest('Vehicle not found');
+  }
+
+  delete (vehicle as Partial<typeof vehicle>)?.created_at;
+  delete (vehicle as Partial<typeof vehicle>)?.updated_at;
+
+  return res
+    .status(200)
+    .json(new ApiResponse('Vehicle retrieved successfully', 200, vehicle));
+});
+
+const updateVehicle = asyncHandler(async (req, res) => {
+  const { vehicleId } = req.params;
+  if (!vehicleId) {
+    throw badRequest('Vehicle ID is required');
+  }
+
+  const {
+    vehicle_name,
+    type,
+    registration_number,
+    daily_rent_price,
+    availability_status,
+  } = req.body;
+
+  const updatedVehicle = await vehicleService.updateVehicle(
+    {
       vehicle_name,
       type,
       registration_number,
       daily_rent_price,
       availability_status,
-    });
+    },
+    vehicleId!
+  );
 
-    const formattedVehicles = {
-      id: vehicle?.id,
-      vehicle_name: vehicle?.vehicle_name,
-      type: vehicle?.type,
-      registration_number: vehicle?.registration_number,
-      daily_rent_price: vehicle?.daily_rent_price,
-      availability_status: vehicle?.availability_status,
-    };
+  delete (updatedVehicle as Partial<typeof updatedVehicle>)?.created_at;
+  delete (updatedVehicle as Partial<typeof updatedVehicle>)?.updated_at;
 
-    const vehicleResponse = {
-      success: true,
-      message: 'Vehicle created successfully',
-      data: formattedVehicles,
-    };
+  return res
+    .status(200)
+    .json(new ApiResponse('Vehicle updated successfully', 200, updatedVehicle));
+});
 
-    return res.status(201).json(vehicleResponse);
-  } catch (error) {
-    next(error);
+const deleteVehicle = asyncHandler(async (req, res) => {
+  const { vehicleId } = req.params;
+
+  if (!vehicleId) {
+    throw badRequest('Vehicle ID is required');
   }
-};
 
-const getSingleVehicle = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { vehicleId } = req.params;
-    const vehicle = await vehicleService.getSingleVehicle(vehicleId!);
+  await vehicleService.deleteVehicle(vehicleId!);
 
-    if (!vehicle) {
-      return res.status(404).json({
-        success: false,
-        message: 'failed to retrieve vehicle',
-      });
-    }
-
-    delete (vehicle as Partial<typeof vehicle>)?.created_at;
-    delete (vehicle as Partial<typeof vehicle>)?.updated_at;
-
-    return res.status(200).json({
-      success: true,
-      message: 'Vehicle retrieved successfully',
-      data: vehicle,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const updateVehicle = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { vehicleId } = req.params;
-    const {
-      vehicle_name,
-      type,
-      registration_number,
-      daily_rent_price,
-      availability_status,
-    } = req.body;
-
-    const updatedVehicle = await vehicleService.updateVehicle(
-      {
-        vehicle_name,
-        type,
-        registration_number,
-        daily_rent_price,
-        availability_status,
-      },
-      vehicleId!
-    );
-
-    if (!updatedVehicle) {
-      return res.status(404).json({
-        success: false,
-        message: 'Vehicle not found',
-      });
-    }
-
-    delete (updatedVehicle as Partial<typeof updatedVehicle>)?.created_at;
-    delete (updatedVehicle as Partial<typeof updatedVehicle>)?.updated_at;
-
-    return res.status(200).json({
-      success: true,
-      message: 'Vehicle updated successfully',
-      data: updatedVehicle,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const deleteVehicle = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { vehicleId } = req.params;
-
-    const deletedVehicle = await vehicleService.deleteVehicle(vehicleId!);
-
-    if (!deletedVehicle) {
-      return res.status(404).json({
-        success: false,
-        message: 'Vehicle not found',
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: 'Vehicle deleted successfully',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  return res
+    .status(200)
+    .json(new ApiResponse('Vehicle deleted successfully', 200));
+});
 
 export const vehicleController = {
   getVehicles,

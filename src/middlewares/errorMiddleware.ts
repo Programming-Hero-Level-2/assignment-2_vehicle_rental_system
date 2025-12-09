@@ -22,14 +22,13 @@ const errorMiddleware = (
   const responseBody: ErrorResponseBody = {
     success: false,
     message: err.message || 'An unexpected server error occurred',
-    errors: err.responseBody?.errors || 'Internal Server Error',
+    errors: err.responseBody?.errors || err.message || 'Internal Server Error',
   };
 
   console.log(`[ERROR] :: ${err.message}`);
 
   res.status(status).json(responseBody);
 
-  // next();
 };
 
 export default errorMiddleware;
