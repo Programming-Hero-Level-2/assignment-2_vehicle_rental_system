@@ -69,7 +69,7 @@ const createVehicle = async (
 };
 
 const getSingleVehicle = async (
-  vehicleId: string
+  vehicleId: number
 ): Promise<(Vehicle & { created_at: Date; updated_at: Date }) | null> => {
   const vehicle = await pool.query('SELECT * FROM vehicles WHERE id = $1', [
     vehicleId,
@@ -80,7 +80,7 @@ const getSingleVehicle = async (
 
 const updateVehicle = async (
   payload: Omit<Vehicle, 'id'>,
-  id: string
+  id: number
 ): Promise<Vehicle & { created_at: Date; updated_at: Date }> => {
   const existingVehicle = await getSingleVehicle(id);
 
@@ -132,7 +132,7 @@ const updateVehicle = async (
 };
 
 const deleteVehicle = async (
-  id: string
+  id: number
 ): Promise<Vehicle & { created_at: Date; updated_at: Date }> => {
   const activeBooking = await pool.query(
     'SELECT * FROM bookings WHERE vehicle_id = $1 AND status = $2',

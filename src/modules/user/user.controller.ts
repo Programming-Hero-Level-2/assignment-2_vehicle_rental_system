@@ -28,7 +28,7 @@ const updateUser = asyncHandler(async (req, res) => {
     throw badRequest('User ID is required');
   }
 
-  const user = await userServices.updateUser(userId!, req.body);
+  const user = await userServices.updateUser(+userId!, req.body);
 
   delete (user as Partial<User>).password;
   delete (user as Partial<User>).created_at;
@@ -44,7 +44,7 @@ const deleteUser = asyncHandler(async (req, res) => {
     throw badRequest('User ID is required');
   }
 
-  await userServices.deleteUser(userId!);
+  await userServices.deleteUser(+userId!);
 
   res.status(200).json(new ApiResponse('User deleted successfully', 200));
 });

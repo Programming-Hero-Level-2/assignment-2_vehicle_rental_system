@@ -107,7 +107,7 @@ const createBooking = async (
 };
 
 const findBookingsByUserId = async (
-  userId: string
+  userId: number
 ): Promise<BookingResponse['data']> => {
   const results = await pool.query(
     'SELECT * FROM bookings WHERE customer_id = $1;',
@@ -135,8 +135,8 @@ const findBookingsByUserId = async (
 };
 const updateBooking = async (
   payload: { status: 'active' | 'cancelled' | 'returned' },
-  bookingId: string,
-  customerId: string
+  bookingId: number,
+  customerId: number
 ): Promise<CreateBookingResponse['data'] | null> => {
   const existingBookingQuery = await pool.query(
     'SELECT * FROM bookings WHERE id = $1;',

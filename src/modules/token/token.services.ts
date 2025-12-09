@@ -28,7 +28,7 @@ export const generateToken = ({
   payload,
   secret = config.ACCESS_TOKEN_SECRET,
   algorithm = 'HS256',
-  expiresIn = 1600,
+  expiresIn = config.ACCESS_TOKEN_EXPIRES_IN,
 }: GenerateTokenOptions): string => {
   try {
     const options: SignOptions = { algorithm, expiresIn };
@@ -61,7 +61,7 @@ const verifyToken = ({
       | JwtLibPayload;
   } catch (err) {
     console.error('[JWT verifyToken]:', err);
-    throw new Error('Internal Server Error');
+    throw new Error('Invalid or expired token');
   }
 };
 

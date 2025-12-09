@@ -1,4 +1,3 @@
-import { NextFunction, Request, Response } from 'express';
 import tokenServices from '../modules/token/token.services';
 import { userServices } from '../modules/user/user.services';
 import { User } from '../modules/user/user.types';
@@ -14,8 +13,7 @@ const authenticated = asyncHandler(async (req, _res, next) => {
 
   const decodedToken = tokenServices.verifyToken({ token: token! });
 
-  const user = await userServices.findUserByEmail((decodedToken as User).email);
-
+  const user = await userServices.findUserById(Number((decodedToken as User).id));
   if (!user) {
     return next(authenticationError('Authentication failed'));
   }

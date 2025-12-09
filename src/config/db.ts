@@ -18,7 +18,7 @@ const initializeDatabase = async () => {
     `);
     await pool.query(`
   CREATE TABLE IF NOT EXISTS users (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     phone VARCHAR(15) NOT NULL,
@@ -51,7 +51,7 @@ const initializeDatabase = async () => {
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS vehicles (
-      id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+      id SERIAL PRIMARY KEY,
       vehicle_name VARCHAR(100) NOT NULL,
       type vehicle_type NOT NULL,
       registration_number VARCHAR(50) UNIQUE NOT NULL,
@@ -63,20 +63,20 @@ const initializeDatabase = async () => {
       `);
 
     await pool.query(`
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'booking_status') THEN
-    CREATE TYPE booking_status AS ENUM ('active', 'cancelled', 'returned');
-  END IF;
-END
-$$;
-`);
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'booking_status') THEN
+          CREATE TYPE booking_status AS ENUM ('active', 'cancelled', 'returned');
+        END IF;
+      END
+      $$;
+      `);
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS bookings (
-      id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-      customer_id UUID REFERENCES users(id) ON DELETE CASCADE,
-      vehicle_id UUID REFERENCES vehicles(id) ON DELETE CASCADE,
+      id SERIAL PRIMARY KEY,
+      customer_id SERIAL REFERENCES users(id) ON DELETE CASCADE,
+      vehicle_id SERIAL REFERENCES vehicles(id) ON DELETE CASCADE,
       rent_start_date TIMESTAMP NOT NULL,
       rent_end_date TIMESTAMP NOT NULL,
       total_price NUMERIC(10, 2) NOT NULL CHECK (total_price >= 0),

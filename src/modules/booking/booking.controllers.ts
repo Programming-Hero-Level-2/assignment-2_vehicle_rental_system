@@ -66,8 +66,8 @@ const updateBooking = asyncHandler(async (req, res) => {
 
   const updatedBooking = await bookingService.updateBooking(
     { status },
-    bookingId!,
-    req.user!.id
+    Number(bookingId),
+    Number(req.user!.id)
   );
 
   if (!updatedBooking) {

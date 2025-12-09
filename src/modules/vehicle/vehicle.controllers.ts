@@ -1,8 +1,7 @@
-import { NextFunction, Request, Response } from 'express';
-import { vehicleService } from './vehicle.services';
-import asyncHandler from '../../utils/asyncHandler';
 import ApiResponse from '../../utils/ApiResponse';
+import asyncHandler from '../../utils/asyncHandler';
 import { badRequest } from '../../utils/error';
+import { vehicleService } from './vehicle.services';
 
 const getVehicles = asyncHandler(async (_req, res) => {
   const vehicles = await vehicleService.getVehicles();
@@ -71,7 +70,7 @@ const getSingleVehicle = asyncHandler(async (req, res) => {
     throw badRequest('Vehicle ID is required');
   }
 
-  const vehicle = await vehicleService.getSingleVehicle(vehicleId!);
+  const vehicle = await vehicleService.getSingleVehicle(Number(vehicleId!));
 
   if (!vehicle) {
     throw badRequest('Vehicle not found');
@@ -107,7 +106,7 @@ const updateVehicle = asyncHandler(async (req, res) => {
       daily_rent_price,
       availability_status,
     },
-    vehicleId!
+    +vehicleId!
   );
 
   delete (updatedVehicle as Partial<typeof updatedVehicle>)?.created_at;
@@ -125,7 +124,7 @@ const deleteVehicle = asyncHandler(async (req, res) => {
     throw badRequest('Vehicle ID is required');
   }
 
-  await vehicleService.deleteVehicle(vehicleId!);
+  await vehicleService.deleteVehicle(Number(vehicleId!));
 
   return res
     .status(200)

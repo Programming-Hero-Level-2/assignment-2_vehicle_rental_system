@@ -1,6 +1,6 @@
 import { pool } from '../../config/db';
 import { badRequest, notFound, serverError } from '../../utils/error';
-import { CreateUserType, DeleteResponseType, User } from './user.types';
+import { CreateUserType, User } from './user.types';
 
 /**
  * Find user by email
@@ -21,7 +21,7 @@ const findUserByEmail = async (email: string): Promise<User | null> => {
  * @param id
  * @returns User
  */
-const findUserById = async (id: string): Promise<User | null> => {
+const findUserById = async (id: number): Promise<User | null> => {
   const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [
     id,
   ]);
@@ -48,7 +48,7 @@ const getUsers = async (): Promise<User[]> => {
 };
 
 const updateUser = async (
-  id: string,
+  id: number,
   payload: CreateUserType
 ): Promise<User> => {
   const user = await findUserById(id);
@@ -83,7 +83,7 @@ const updateUser = async (
  * @param id number
  * @returns User
  */
-const deleteUser = async (id: string): Promise<User> => {
+const deleteUser = async (id: number): Promise<User> => {
   const user = await findUserById(id);
 
   if (!user) {

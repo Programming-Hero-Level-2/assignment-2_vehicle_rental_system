@@ -1,5 +1,5 @@
 export type User = {
-  id: string;
+  id: number;
   name: string;
   email: string;
   phone: string;
@@ -11,10 +11,9 @@ export type User = {
 
 export type CreateUserType = Omit<User, 'id' | 'created_at' | 'updated_at'>;
 
-
 export type UpdateUserType = Partial<CreateUserType>;
 export type DeleteResponseType = {
   code: number;
   message: string;
   success: boolean;
-}
+};

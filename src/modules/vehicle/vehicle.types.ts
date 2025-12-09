@@ -1,5 +1,5 @@
 export type Vehicle = {
-  id: string;
+  id: number;
   vehicle_name: string;
   type: 'car' | 'bike' | 'van' | 'SUV';
   registration_number: string;
